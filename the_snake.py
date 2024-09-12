@@ -1,5 +1,5 @@
+"""В текущем модуле реализована основная логика игры."""
 from random import randint
-'''В текущем модуле реализована основная логика игры.'''
 
 import pygame
 
@@ -45,21 +45,24 @@ pygame.display.set_caption('Змейка')
 # Настройка времени:
 clock = pygame.time.Clock()
 
+# Центр экрана:
+CENTRE = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+
 
 class GameObject:
-    """Класс GameObject - игровые объекты
+    """Класс GameObject описывает игровые объекты.
 
-    Служит для описания общих атрибутов и методов объектов,
-    которые используются в игре.
+    В классе определены атрибуты и методы, общие для
+    объектов, которые используются в игре.
     """
 
     def __init__(self) -> None:
         """Метод инициализирует начальную позицию и цвет объектов."""
-        self.position = ((SCREEN_WIDTH // 2), (SCREEN_HEIGHT) // 2)
+        self.position = CENTRE
         self.body_color = None
 
     def draw(self):
-        """Метод отрисовки объектов
+        """Метод отрисовки объектов.
 
         Этот метод определяет, как объект будет отрисовываться на экране.
         Для каждого дочернего класса объектов игры метод переопределяется.
@@ -70,13 +73,15 @@ class Apple(GameObject):
     """Класс Apple описывает объект яблоко."""
 
     def __init__(self):
-        """Метод инициализации яблока
+        """Метод инициализации яблока.
 
         Переинициализирует начальную позицию яблока, с учетом
         стартовой позиции змейки. Задает цвет яблока.
         """
         super().__init__()
-        self.randomize_position(self.position)
+        # По результатам обсуждения в пачке исправление реализовала путем
+        # добавления значения по умолчанию в функцию randomize_position
+        self.randomize_position()
         self.body_color = APPLE_COLOR
 
     def draw(self):
@@ -85,7 +90,7 @@ class Apple(GameObject):
         pygame.draw.circle(screen, self.body_color, center, (GRID_SIZE) // 2)
         pygame.draw.circle(screen, BORDER_COLOR, center, (GRID_SIZE) // 2, 1)
 
-    def randomize_position(self, positions):
+    def randomize_position(self, positions=[CENTRE]):
         """Метод определяет положение яблока.
 
         Метод случайным образом выбирает новую позицию яблока так,чтобы
@@ -120,6 +125,11 @@ class Snake(GameObject):
         необходимо для «стирания» этого сегмента с игрового поля, чтобы змейка
         визуально двигалась.
         Атрибут lenghth хранит длину змейки. Начальное значение 1.
+        Длина змейки может не совпадать с количеством сегментов в ее теле
+        (длинной списка positions). Так как, в момент поедания яблока,
+        значение атрибута lenghth увеличивается сразу, а новый сегмент
+        тела змейки добавляется на следующем шаге основного цикла
+        программы, когда происходит передвижение змейки (в методе move).
         """
         super().__init__()
         self.body_color = SNAKE_COLOR
@@ -152,15 +162,16 @@ class Snake(GameObject):
         new_height = (head_y + direct_y * GRID_SIZE) % SCREEN_HEIGHT
         self.positions.insert(0, (new_width, new_height))
         if len(self.positions) > self.lenghth:
-            self.last = self.positions[-1]
-            self.positions.pop()
+            self.last = self.positions.pop()
+        else:
+            self.last = None
 
     def get_head_position(self):
         """Метод получает текущую позицию головы змейки."""
         return self.positions[0]
 
     def reset(self):
-        """Метод запускает игру сначала
+        """Метод запускает игру сначала.
 
         Змейка возвращается в исходное состояние.
         """
@@ -172,14 +183,15 @@ class Snake(GameObject):
         # Поскольку изображение головы отличается от остального
         # туловища, при смещении змейки, нужно затереть исходную
         # голову (после смещения, она будет на позиции 1 списка)
-        for position in self.positions[1:2]:
-            rect = (pygame.Rect(position, (GRID_SIZE, GRID_SIZE)))
+        if len(self.positions) > 1:
+            rect = (pygame.Rect(self.positions[1], (GRID_SIZE, GRID_SIZE)))
             pygame.draw.rect(screen, self.body_color, rect)
             pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
 
         # Отрисовка головы змейки
-        head_x, head_y = self.positions[0]
-        head_rect = pygame.Rect(self.positions[0], (GRID_SIZE, GRID_SIZE))
+        head = self.get_head_position()
+        head_x, head_y = head
+        head_rect = pygame.Rect(head, (GRID_SIZE, GRID_SIZE))
         pygame.draw.rect(screen, self.head_color, head_rect)
         pygame.draw.rect(screen, BORDER_COLOR, head_rect, 1)
         left_eye = (head_x + 5, head_y + 5)
@@ -214,10 +226,9 @@ def handle_keys(game_object):
 
 
 def main():
-    """В теле функции записан основной исполняющий модуль
+    """В теле функции записан основной исполняющий модуль.
 
-    Используется, чтобы код из нее не запускался из внешних
-    модулей.
+    Используется, чтобы код из нее не запускался из внешних модулей.
     """
     # Инициализация PyGame:
     pygame.init()
