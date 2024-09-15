@@ -72,7 +72,7 @@ class GameObject:
 class Apple(GameObject):
     """Класс Apple описывает объект яблоко."""
 
-    def __init__(self):
+    def __init__(self, start_position=[CENTRE]):
         """Метод инициализации яблока.
 
         Переинициализирует начальную позицию яблока, с учетом
@@ -81,16 +81,16 @@ class Apple(GameObject):
         super().__init__()
         # По результатам обсуждения в пачке исправление реализовала путем
         # добавления значения по умолчанию в функцию randomize_position
-        self.randomize_position()
+        self.randomize_position(start_position)
         self.body_color = APPLE_COLOR
 
     def draw(self):
         """Метод отрисовывает яблоко в виде окружности."""
         center = (self.position[0] + 10, self.position[1] + 10)
-        pygame.draw.circle(screen, self.body_color, center, (GRID_SIZE) // 2)
-        pygame.draw.circle(screen, BORDER_COLOR, center, (GRID_SIZE) // 2, 1)
+        pygame.draw.circle(screen, self.body_color, center, GRID_SIZE // 2)
+        pygame.draw.circle(screen, BORDER_COLOR, center, GRID_SIZE // 2, 1)
 
-    def randomize_position(self, positions=[CENTRE]):
+    def randomize_position(self, positions):
         """Метод определяет положение яблока.
 
         Метод случайным образом выбирает новую позицию яблока так,чтобы
@@ -234,7 +234,7 @@ def main():
     pygame.init()
     # Создаем экземпляры классов.
     snake = Snake()
-    apple = Apple()
+    apple = Apple(snake.positions)
 
     # Основная логика игры.
     while True:
